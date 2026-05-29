@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { collection, doc, setDoc, updateDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, uploadString } from 'firebase/storage';
 import { db, storage, handleFirestoreError } from '../lib/firebase';
 import { OperationType, Member } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Mail, Phone, MapPin, Calendar, Heart, Church, Camera, CheckCircle2, X, AlertCircle, Search, RefreshCw } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, Heart, Church, Camera, CheckCircle2, X, AlertCircle, Search, RefreshCw, Laptop } from 'lucide-react';
+import Webcam from 'react-webcam';
 import { PRE_DEFINED_MEMBERS } from '../data/memberNames';
 
 interface RegistrationFormProps {
@@ -32,6 +33,8 @@ export default function RegistrationForm({ memberToEdit, onCancel, onSuccess, is
   });
   const [photo, setPhoto] = useState<File | string | null>(null); // Can be File or base64 string
   const [photoPreview, setPhotoPreview] = useState<string | null>(memberToEdit?.photoUrl || null);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const webcamRef = useRef<Webcam>(null);
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -136,6 +139,14 @@ export default function RegistrationForm({ memberToEdit, onCancel, onSuccess, is
     setPhotoPreview(member.photoUrl || null);
     setShowSuggestions(false);
   };
+
+  const capture = useCallback(() => {
+    const imageSrc = webcamRef.current?.getScreenshot();
+    if (imageSrc) {
+      setPhoto(imageSrc);
+      setIsCameraOpen(false);
+    }
+  }, [webcamRef]);
 
   const compressImage = (fileSource: File | string): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -557,54 +568,107 @@ export default function RegistrationForm({ memberToEdit, onCancel, onSuccess, is
               <Camera size={16} /> Foto de Perfil
             </label>
             
-            <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-              <div className="shrink-0">
-                {photoPreview ? (
-                  <div className="relative group">
-                    <img 
-                      src={photoPreview} 
-                      alt="Preview" 
-                      className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-md"
+            <AnimatePresence>
+              {isCameraOpen ? (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-4"
+                >
+                  <div className="relative rounded-2xl overflow-hidden bg-black aspect-square max-w-[300px] mx-auto shadow-2xl border-4 border-white">
+                    <Webcam
+                      audio={false}
+                      ref={webcamRef}
+                      screenshotFormat="image/jpeg"
+                      videoConstraints={{ facingMode: "user" }}
+                      className="w-full h-full object-cover"
+                      mirrored={false}
+                      imageSmoothing={true}
+                      disablePictureInPicture={true}
+                      forceScreenshotSourceSize={true}
+                      onUserMedia={() => {}}
+                      onUserMediaError={() => {}}
+                      screenshotQuality={0.92}
                     />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPhoto(null);
-                        setPhotoPreview(null);
-                      }}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X size={14} />
-                    </button>
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
+                      <button
+                        type="button"
+                        onClick={capture}
+                        className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+                        title="Tirar Foto"
+                      >
+                        <Camera size={24} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsCameraOpen(false)}
+                        className="bg-red-500 text-white p-4 rounded-full shadow-lg hover:bg-red-600 transition-colors"
+                        title="Cancelar"
+                      >
+                        <X size={24} />
+                      </button>
+                    </div>
                   </div>
-                ) : (
-                  <div className="w-24 h-24 rounded-2xl bg-gray-200 flex items-center justify-center text-gray-400">
-                    <Camera size={32} />
+                </motion.div>
+              ) : (
+                <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                  <div className="shrink-0">
+                    {photoPreview ? (
+                      <div className="relative group">
+                        <img 
+                          src={photoPreview} 
+                          alt="Preview" 
+                          className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-md"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPhoto(null);
+                            setPhotoPreview(null);
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-24 h-24 rounded-2xl bg-gray-200 flex items-center justify-center text-gray-400">
+                        <Camera size={32} />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-              <div className="space-y-3 text-center sm:text-left flex-1">
-                <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                  <input
-                    type="file"
-                    id="photo-upload"
-                    accept="image/*"
-                    onChange={(e) => setPhoto(e.target.files?.[0] || null)}
-                    className="hidden"
-                  />
-                  <label 
-                    htmlFor="photo-upload"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer transition-all shadow-sm"
-                  >
-                    <RefreshCw size={14} /> Selecionar Arquivo
-                  </label>
-                </div>
+                  <div className="space-y-3 text-center sm:text-left flex-1">
+                    <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                      <input
+                        type="file"
+                        id="photo-upload"
+                        accept="image/*"
+                        onChange={(e) => setPhoto(e.target.files?.[0] || null)}
+                        className="hidden"
+                      />
+                      <label 
+                        htmlFor="photo-upload"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer transition-all shadow-sm"
+                      >
+                        <RefreshCw size={14} /> Selecionar Arquivo
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setIsCameraOpen(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-100 rounded-lg text-sm font-semibold text-blue-700 hover:bg-blue-100 transition-all shadow-sm"
+                      >
+                        <Laptop size={14} /> Usar Câmera
+                      </button>
+                    </div>
 
-                <p className="text-[10px] text-gray-500 italic">
-                  Se você não enviar uma foto, um avatar automático será gerado com base no seu nome.
-                </p>
-              </div>
-            </div>
+                    <p className="text-[10px] text-gray-500 italic">
+                      Se você não enviar uma foto, um avatar automático será gerado com base no seu nome.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* LGPD Consent */}
