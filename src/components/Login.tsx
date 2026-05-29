@@ -36,7 +36,7 @@ export default function Login() {
       } else if (authError.code === 'auth/cancelled-by-user') {
         setError('O login foi cancelado.');
       } else {
-        setError('Um erro inesperado ocorreu. Por favor, tente novamente em instantes.');
+        setError(`Erro: ${authError.message}`);
       }
     } finally {
       setLoading(false);

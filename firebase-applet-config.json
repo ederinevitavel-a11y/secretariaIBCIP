@@ -1,10 +1,9 @@
 {
-  "projectId": "glowing-aileron-zcf5x",
-  "appId": "1:126953225401:web:d4a905151d79fd5d892f68",
-  "apiKey": "AIzaSyD_DpsjbbrxmQ1eDBUJLYRg3am_OAPShIg",
-  "authDomain": "glowing-aileron-zcf5x.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-c2a768a6-2fec-41a5-9f38-82517bc0780a",
-  "storageBucket": "glowing-aileron-zcf5x.firebasestorage.app",
-  "messagingSenderId": "126953225401",
-  "measurementId": ""
+  "projectId": "secretariaibcip-7e0b2",
+  "appId": "1:831209863382:web:f07fb76824bb4ba2863177",
+  "apiKey": "AIzaSyChxewlHDDFgyBLi857uZ4tMPSogYc5a_0",
+  "authDomain": "secretariaibcip-7e0b2.firebaseapp.com",
+  "storageBucket": "secretariaibcip-7e0b2.firebasestorage.app",
+  "messagingSenderId": "831209863382",
+  "measurementId": "G-4SCJMF32PK"
 }
