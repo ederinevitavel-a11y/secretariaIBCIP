@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+             (request.auth.token.email == 'eloltronica@gmail.com' || 
+              request.auth.token.email == 'elaine.rsn@hotmail.com');
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    match /members/{memberId} {
+      allow create: if isValidId(memberId) && isValidMember(incoming());
+      allow update: if isValidId(memberId) && isValidMember(incoming());
+      allow get: if true;
+      allow read, list, delete: if isAdmin();
+    }
+
+    function isValidMember(data) {
+      let requiredFields = ['name', 'lgpdConsent', 'createdAt'];
+      return data.keys().hasAll(requiredFields) &&
+             data.keys().size() <= 30 &&
+             data.name is string && data.name.size() > 0 &&
+             data.lgpdConsent is bool &&
+             data.createdAt is timestamp;
+    }
+  }
+}

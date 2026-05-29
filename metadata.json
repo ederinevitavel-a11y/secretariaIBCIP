@@ -1,0 +1,6 @@
+{
+  "name": "Cadastro de Membros IBCIP",
+  "description": "Aplicativo para cadastro de membros IBCIP com exportação para PDF e Excel.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
