@@ -471,24 +471,6 @@ export default function RegistrationForm({ memberToEdit, onCancel, onSuccess, is
                 max={new Date().toISOString().split('T')[0]}
                 className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               />
-              <div className="text-xs">
-                {age !== null ? (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-xs text-blue-700 font-medium flex items-center gap-1.5 mt-1"
-                  >
-                    <span>Idade atual: <strong className="text-blue-900 font-bold">{age} {age === 1 ? 'ano' : 'anos'}</strong></span>
-                    <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-semibold border border-emerald-200">
-                      atualizada automaticamente
-                    </span>
-                  </motion.div>
-                ) : (
-                  <span className="text-[11px] text-gray-400 block mt-1">
-                    A idade é calculada e atualizada automaticamente a partir da data de nascimento.
-                  </span>
-                )}
-              </div>
             </div>
 
             {/* Email */}

@@ -302,7 +302,7 @@ export default function DashboardOverview({
             Panorama & Inteligência Pastoral
           </h2>
           <p className="text-gray-500 text-sm mt-0.5">
-            Visão consolidada da congregação IBCIP • Conheça o perfil, idades, vocações e aniversários dos membros
+            Visão consolidada da IBCIP • Conheça o perfil, idades, vocações e aniversários dos membros
           </p>
         </div>
 
