@@ -35,6 +35,8 @@ export default function Login() {
         setError('O seu navegador bloqueou o pop-up de login. Por favor, habilite pop-ups para este site.');
       } else if (authError.code === 'auth/cancelled-by-user') {
         setError('O login foi cancelado.');
+      } else if (authError.code === 'auth/unauthorized-domain') {
+        setError(`Domínio não autorizado no Firebase Console. Adicione o domínio "${window.location.hostname}" em Autenticação > Configurações > Domínios autorizados.`);
       } else {
         setError(`Erro: ${authError.message}`);
       }
@@ -63,14 +65,14 @@ export default function Login() {
             className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3 text-left"
           >
             <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={18} />
-            <p className="text-sm text-red-600">{error}</p>
+            <p className="text-sm text-red-600 leading-relaxed">{error}</p>
           </motion.div>
         )}
 
         <button
           onClick={handleLogin}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-100 py-3.5 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-200 transition-all shadow-sm active:scale-[0.98] disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-100 py-3.5 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-200 transition-all shadow-sm active:scale-[0.98] disabled:opacity-50 cursor-pointer"
         >
           {loading ? (
             <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />

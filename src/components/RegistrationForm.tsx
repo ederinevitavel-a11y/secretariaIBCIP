@@ -9,9 +9,10 @@ import { ref, uploadBytes, getDownloadURL, uploadString } from 'firebase/storage
 import { db, storage, handleFirestoreError } from '../lib/firebase';
 import { OperationType, Member } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Mail, Phone, MapPin, Calendar, Heart, Church, Camera, CheckCircle2, X, AlertCircle, Search, RefreshCw, Laptop } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Calendar, Heart, Church, Camera, CheckCircle2, X, AlertCircle, Search, RefreshCw, Laptop, Briefcase, Sparkles } from 'lucide-react';
 import Webcam from 'react-webcam';
 import { PRE_DEFINED_MEMBERS } from '../data/memberNames';
+import { calculateAge, formatAge } from '../lib/dateUtils';
 
 interface RegistrationFormProps {
   memberToEdit?: Member;
@@ -28,6 +29,7 @@ export default function RegistrationForm({ memberToEdit, onCancel, onSuccess, is
     phone: memberToEdit?.phone || '',
     address: memberToEdit?.address || '',
     maritalStatus: memberToEdit?.maritalStatus || 'Solteiro(a)',
+    profession: memberToEdit?.profession || '',
     originChurch: memberToEdit?.originChurch || '',
     lgpdConsent: memberToEdit?.lgpdConsent || false,
   });
@@ -58,6 +60,7 @@ export default function RegistrationForm({ memberToEdit, onCancel, onSuccess, is
         phone: memberToEdit.phone,
         address: memberToEdit.address,
         maritalStatus: memberToEdit.maritalStatus,
+        profession: memberToEdit.profession || '',
         originChurch: memberToEdit.originChurch,
         lgpdConsent: memberToEdit.lgpdConsent || false,
       });
@@ -133,6 +136,7 @@ export default function RegistrationForm({ memberToEdit, onCancel, onSuccess, is
       phone: member.phone || '',
       address: member.address || '',
       maritalStatus: member.maritalStatus || 'Solteiro(a)',
+      profession: member.profession || '',
       originChurch: member.originChurch || '',
       lgpdConsent: member.lgpdConsent || false,
     });
@@ -227,9 +231,11 @@ export default function RegistrationForm({ memberToEdit, onCancel, onSuccess, is
         screenResolution: `${window.screen.width}x${window.screen.height}`,
       } : (currentMember?.lgpdMetadata || null);
 
+      const calculatedAge = calculateAge(formData.dob);
+
       const dataToSave = {
         ...formData,
-        age: age || 0,
+        age: calculatedAge !== null ? calculatedAge : 0,
         photoUrl: finalPhotoUrl,
         lgpdConsentDate: formData.lgpdConsent ? (currentMember?.lgpdConsentDate || new Date().toISOString()) : null,
         lgpdMetadata,
@@ -309,19 +315,6 @@ export default function RegistrationForm({ memberToEdit, onCancel, onSuccess, is
   const selectName = (name: string) => {
     setFormData(prev => ({ ...prev, name }));
     setShowSuggestions(false);
-  };
-
-  const calculateAge = (dob: string) => {
-    if (!dob) return null;
-    const birthDate = new Date(dob);
-    if (isNaN(birthDate.getTime())) return null;
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age >= 0 ? age : null;
   };
 
   const age = calculateAge(formData.dob);
@@ -458,27 +451,44 @@ export default function RegistrationForm({ memberToEdit, onCancel, onSuccess, is
 
             {/* Data de Nascimento */}
             <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <Calendar size={16} /> Data de Nascimento
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Calendar size={16} /> Data de Nascimento
+                </label>
+                {age !== null && (
+                  <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 flex items-center gap-1">
+                    <Sparkles size={11} className="text-blue-500" />
+                    {age} {age === 1 ? 'ano' : 'anos'}
+                  </span>
+                )}
+              </div>
               <input
                 required
                 type="date"
                 name="dob"
                 value={formData.dob}
                 onChange={handleChange}
+                max={new Date().toISOString().split('T')[0]}
                 className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               />
-              {age !== null && (
-                <motion.div 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg mt-1"
-                >
-                  <Calendar size={12} />
-                  {age} {age === 1 ? 'ano' : 'anos'}
-                </motion.div>
-              )}
+              <div className="text-xs">
+                {age !== null ? (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs text-blue-700 font-medium flex items-center gap-1.5 mt-1"
+                  >
+                    <span>Idade atual: <strong className="text-blue-900 font-bold">{age} {age === 1 ? 'ano' : 'anos'}</strong></span>
+                    <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-semibold border border-emerald-200">
+                      atualizada automaticamente
+                    </span>
+                  </motion.div>
+                ) : (
+                  <span className="text-[11px] text-gray-400 block mt-1">
+                    A idade é calculada e atualizada automaticamente a partir da data de nascimento.
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Email */}
@@ -528,9 +538,9 @@ export default function RegistrationForm({ memberToEdit, onCancel, onSuccess, is
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Estado Civil */}
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 <Heart size={16} /> Estado Civil
               </label>
@@ -546,8 +556,22 @@ export default function RegistrationForm({ memberToEdit, onCancel, onSuccess, is
               </select>
             </div>
 
-            {/* Igreja de Origem */}
-            <div className="space-y-2 md:col-span-3">
+            {/* Ocupação */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <Briefcase size={16} /> Ocupação
+              </label>
+              <input
+                name="profession"
+                value={formData.profession}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                placeholder="Ex: Professor, Autônomo"
+              />
+            </div>
+
+            {/* Igreja de Origem (posicionada embaixo de Estado Civil na versão para computador) */}
+            <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
                 <Church size={16} /> Igreja de Origem (Batismo)
               </label>
@@ -557,7 +581,7 @@ export default function RegistrationForm({ memberToEdit, onCancel, onSuccess, is
                 value={formData.originChurch}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                placeholder="Nome da igreja onde foi batizado"
+                placeholder="Onde foi batizado"
               />
             </div>
           </div>

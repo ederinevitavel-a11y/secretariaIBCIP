@@ -11,6 +11,7 @@ export interface Member {
   phone: string;
   address: string;
   maritalStatus: 'Solteiro(a)' | 'Casado(a)' | 'Viúvo(a)';
+  profession?: string;
   originChurch: string;
   age?: number;
   photoUrl?: string;

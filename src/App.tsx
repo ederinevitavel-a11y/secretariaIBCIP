@@ -25,7 +25,7 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
+  const isAdmin = !!user?.email && ADMIN_EMAILS.some(e => e.toLowerCase() === user.email?.toLowerCase());
 
   const handleLogout = async () => {
     await signOut(auth);

@@ -7,18 +7,28 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { Member } from '../types';
+import { getEffectiveAge } from './dateUtils';
 
 export const exportToExcel = (members: Member[]) => {
   const data = members.map(m => {
-    const [year, month, day] = m.dob.split('-');
+    let formattedDob = m.dob || '';
+    if (m.dob && m.dob.includes('-')) {
+      const parts = m.dob.split('-');
+      if (parts.length === 3) {
+        formattedDob = `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+    }
+    const effectiveAge = getEffectiveAge(m);
+
     return {
       Nome: m.name,
-      'Data de Nascimento': `${day}/${month}/${year}`,
-      Idade: m.age || '',
+      'Data de Nascimento': formattedDob,
+      Idade: effectiveAge !== null ? effectiveAge : '',
       Email: m.email,
       Telefone: m.phone,
       Endereço: m.address,
       'Estado Civil': m.maritalStatus,
+      Ocupação: m.profession || 'Não informado',
       'Igreja de Origem': m.originChurch,
       LGPD: m.lgpdConsent ? 'Sim' : 'Não',
       'Log LGPD': m.lgpdMetadata ? `Sim (${new Date(m.lgpdMetadata.acceptedAt).toLocaleString('pt-BR')})` : 'Não',
@@ -39,25 +49,34 @@ export const exportToPDF = (members: Member[]) => {
   doc.text('Relatório de Membros IBCIP', 14, 15);
   
   const tableData = members.map(m => {
-    const [year, month, day] = m.dob.split('-');
+    let formattedDob = m.dob || '';
+    if (m.dob && m.dob.includes('-')) {
+      const parts = m.dob.split('-');
+      if (parts.length === 3) {
+        formattedDob = `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+    }
+    const effectiveAge = getEffectiveAge(m);
+
     return [
       m.name,
-      `${day}/${month}/${year}`,
-      m.age || '',
+      formattedDob,
+      effectiveAge !== null ? `${effectiveAge}` : '',
       m.email,
       m.phone,
       m.maritalStatus,
+      m.profession || '-',
       m.originChurch,
       m.lgpdConsent ? 'Sim' : 'Não'
     ];
   });
 
   autoTable(doc, {
-    head: [['Nome', 'Nasc.', 'Idade', 'Email', 'Tel.', 'Est. Civil', 'Igreja', 'LGPD']],
+    head: [['Nome', 'Nasc.', 'Idade', 'Email', 'Tel.', 'Est. Civil', 'Ocupação', 'Igreja', 'LGPD']],
     body: tableData,
     startY: 20,
     theme: 'grid',
-    styles: { fontSize: 8 },
+    styles: { fontSize: 7.5 },
     headStyles: { fillColor: [41, 128, 185] },
   });
 
